@@ -1,0 +1,747 @@
+{% extends 'base.html' %}
+
+{% block title %}API Documentation - PDF Extraction API{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="sticky-top pt-4" style="top: 2rem;">
+            <div class="card border-secondary mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">API Endpoints</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#section-introduction" class="list-group-item list-group-item-action">Introduction</a>
+                    <a href="#section-authentication" class="list-group-item list-group-item-action">Authentication</a>
+                    <a href="#section-extract-file" class="list-group-item list-group-item-action">Extract (File Upload)</a>
+                    <a href="#section-extract-url" class="list-group-item list-group-item-action">Extract from URL</a>
+                    <a href="#section-extract-optimized" class="list-group-item list-group-item-action">Optimized Extraction</a>
+                    <a href="#section-task-progress" class="list-group-item list-group-item-action">Task Progress</a>
+                    <a href="#section-task-result" class="list-group-item list-group-item-action">Task Result</a>
+                    <a href="#section-active-tasks" class="list-group-item list-group-item-action">Active Tasks</a>
+                    <a href="#section-clear-cache" class="list-group-item list-group-item-action">Clear Cache</a>
+                    <a href="#section-health" class="list-group-item list-group-item-action">Health Check</a>
+                </div>
+            </div>
+            
+            <div class="card border-secondary mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Resources</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('index') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-home me-2"></i> Home
+                    </a>
+                    <a href="http://localhost:8000/docs" target="_blank" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-code me-2"></i> Interactive Swagger UI
+                    </a>
+                    <a href="http://localhost:8000/redoc" target="_blank" class="list-group-item list-group-item-action">
+                        <i class="fas fa-book me-2"></i> ReDoc API Docs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card border-primary mb-5">
+            <div class="card-body">
+                <h1 class="display-5 mb-4">PDF Extraction API Documentation</h1>
+                <p class="lead">
+                    Welcome to the PDF Extraction API documentation. This API allows you to extract content from PDF files
+                    with various options and optimizations.
+                </p>
+                <div class="d-flex gap-2">
+                    <a href="http://localhost:8000/docs" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-file-code me-2"></i> Interactive API Docs
+                    </a>
+                    <a href="#section-extract-optimized" class="btn btn-outline-secondary">
+                        <i class="fas fa-bolt me-2"></i> Try Optimized Extraction
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Introduction -->
+        <section id="section-introduction" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">Introduction</h2>
+            <p>
+                The PDF Extraction API provides advanced content extraction capabilities for PDF documents. It supports 
+                multiple extraction modes, parallel processing, and performance optimization.
+            </p>
+            
+            <h4 class="mt-4">Base URL</h4>
+            <div class="card bg-light mb-4">
+                <div class="card-body">
+                    <code>http://localhost:8000</code>
+                </div>
+            </div>
+            
+            <h4>Extraction Types</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>text</code></td>
+                        <td>Plain text extraction (default, fastest)</td>
+                    </tr>
+                    <tr>
+                        <td><code>structured</code></td>
+                        <td>Extracts text with structure information (tables, paragraphs)</td>
+                    </tr>
+                    <tr>
+                        <td><code>ocr</code></td>
+                        <td>Uses OCR for extracting text from scanned documents or images</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Response Format</h4>
+            <p>All API responses are returned in JSON format with consistent structure:</p>
+            <pre class="bg-dark text-light p-3 rounded"><code>{
+  "status": "success" | "error",
+  "content": { ... },  // Extracted content or null on error
+  "message": "...",    // Success or error message
+  "execution_time": 1.234  // Processing time in seconds
+}</code></pre>
+        </section>
+        
+        <!-- Authentication -->
+        <section id="section-authentication" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">Authentication</h2>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                The API currently does not require authentication. For production use, you should implement an
+                authentication mechanism such as API keys or OAuth.
+            </div>
+        </section>
+        
+        <!-- Extract (File Upload) -->
+        <section id="section-extract-file" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">Extract Content (File Upload)</h2>
+            <p>Extract content from a PDF file uploaded directly.</p>
+            
+            <h4>Request</h4>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td><strong>Method</strong></td>
+                        <td><code>POST</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>URL</strong></td>
+                        <td><code>/extract</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Content-Type</strong></td>
+                        <td><code>multipart/form-data</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Parameters</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>file</code></td>
+                        <td>File</td>
+                        <td>Yes</td>
+                        <td>The PDF file to process (max 16MB)</td>
+                    </tr>
+                    <tr>
+                        <td><code>extraction_type</code></td>
+                        <td>String</td>
+                        <td>No</td>
+                        <td>Type of extraction: <code>text</code> (default), <code>structured</code>, or <code>ocr</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>include_images</code></td>
+                        <td>Boolean</td>
+                        <td>No</td>
+                        <td>Whether to include image information (default: <code>false</code>)</td>
+                    </tr>
+                    <tr>
+                        <td><code>include_metadata</code></td>
+                        <td>Boolean</td>
+                        <td>No</td>
+                        <td>Whether to include document metadata (default: <code>false</code>)</td>
+                    </tr>
+                    <tr>
+                        <td><code>fast_mode</code></td>
+                        <td>Boolean</td>
+                        <td>No</td>
+                        <td>If <code>true</code>, prioritizes speed over accuracy (default: <code>false</code>)</td>
+                    </tr>
+                    <tr>
+                        <td><code>use_cache</code></td>
+                        <td>Boolean</td>
+                        <td>No</td>
+                        <td>Whether to use cached results if available (default: <code>true</code>)</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Example Response</h4>
+            <pre class="bg-dark text-light p-3 rounded"><code>{
+  "status": "success",
+  "content": {
+    "text": {
+      "all_text": "The full text content of the PDF...",
+      "pages": [
+        { "page_num": 1, "text": "Page 1 content..." },
+        { "page_num": 2, "text": "Page 2 content..." }
+      ]
+    }
+  },
+  "metadata": {
+    "title": "Sample Document",
+    "author": "John Doe",
+    "creation_date": "2023-06-15",
+    "page_count": 2
+  },
+  "execution_time": 0.45
+}</code></pre>
+        </section>
+        
+        <!-- Extract from URL -->
+        <section id="section-extract-url" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">Extract Content from URL</h2>
+            <p>Extract content from a PDF file located at a specified URL.</p>
+            
+            <h4>Request</h4>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td><strong>Method</strong></td>
+                        <td><code>POST</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>URL</strong></td>
+                        <td><code>/extract-url</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Content-Type</strong></td>
+                        <td><code>application/json</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Request Body</h4>
+            <pre class="bg-dark text-light p-3 rounded"><code>{
+  "pdf_url": "https://example.com/sample.pdf",
+  "extraction_type": "text",
+  "include_images": false,
+  "include_metadata": true,
+  "fast_mode": false,
+  "use_cache": true
+}</code></pre>
+            
+            <h4>Parameters</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>pdf_url</code></td>
+                        <td>String</td>
+                        <td>Yes</td>
+                        <td>URL of the PDF file to process</td>
+                    </tr>
+                    <tr>
+                        <td><code>extraction_type</code></td>
+                        <td>String</td>
+                        <td>No</td>
+                        <td>Type of extraction: <code>text</code> (default), <code>structured</code>, or <code>ocr</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>include_images</code></td>
+                        <td>Boolean</td>
+                        <td>No</td>
+                        <td>Whether to include image information (default: <code>false</code>)</td>
+                    </tr>
+                    <tr>
+                        <td><code>include_metadata</code></td>
+                        <td>Boolean</td>
+                        <td>No</td>
+                        <td>Whether to include document metadata (default: <code>false</code>)</td>
+                    </tr>
+                    <tr>
+                        <td><code>fast_mode</code></td>
+                        <td>Boolean</td>
+                        <td>No</td>
+                        <td>If <code>true</code>, prioritizes speed over accuracy (default: <code>false</code>)</td>
+                    </tr>
+                    <tr>
+                        <td><code>use_cache</code></td>
+                        <td>Boolean</td>
+                        <td>No</td>
+                        <td>Whether to use cached results if available (default: <code>true</code>)</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Response</h4>
+            <p>Same format as the <code>/extract</code> endpoint.</p>
+        </section>
+        
+        <!-- Optimized Extraction -->
+        <section id="section-extract-optimized" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">Optimized Extraction with Progress Tracking</h2>
+            <p>
+                Extract content from a PDF with real-time progress tracking and performance optimization.
+                This endpoint returns a task ID immediately and processes the PDF asynchronously.
+            </p>
+            
+            <h4>Request</h4>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td><strong>Method</strong></td>
+                        <td><code>POST</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>URL</strong></td>
+                        <td><code>/extract-optimized</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Content-Type</strong></td>
+                        <td><code>multipart/form-data</code> or <code>application/json</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>File Upload Parameters (multipart/form-data)</h4>
+            <p>Same parameters as the <code>/extract</code> endpoint, with an additional <code>optimize_performance</code> parameter (Boolean, default: <code>true</code>).</p>
+            
+            <h4>URL Parameters (application/json)</h4>
+            <pre class="bg-dark text-light p-3 rounded"><code>{
+  "pdf_url": "https://example.com/sample.pdf",
+  "extraction_type": "text",
+  "include_images": false,
+  "include_metadata": true,
+  "fast_mode": false,
+  "use_cache": true,
+  "optimize_performance": true
+}</code></pre>
+            
+            <h4>Response</h4>
+            <pre class="bg-dark text-light p-3 rounded"><code>{
+  "status": "success",
+  "task_id": "64e369fa-b47c-418c-b73e-30213c6cd1ab",
+  "message": "PDF extraction started. Use the task ID to track progress."
+}</code></pre>
+            
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle me-2"></i>
+                After getting the task ID, you should poll the <code>/task-progress/{task_id}</code> endpoint to track progress
+                and finally retrieve the results using <code>/task-result/{task_id}</code> when processing is complete.
+            </div>
+        </section>
+        
+        <!-- Task Progress -->
+        <section id="section-task-progress" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">Get Task Progress</h2>
+            <p>Get the current progress of an extraction task.</p>
+            
+            <h4>Request</h4>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td><strong>Method</strong></td>
+                        <td><code>GET</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>URL</strong></td>
+                        <td><code>/task-progress/{task_id}</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Path Parameters</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>task_id</code></td>
+                        <td>String</td>
+                        <td>The ID of the task to get progress for</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Response</h4>
+            <pre class="bg-dark text-light p-3 rounded"><code>{
+  "task_id": "64e369fa-b47c-418c-b73e-30213c6cd1ab",
+  "current_step": 60,
+  "total_steps": 100,
+  "percentage": 60.0,
+  "status": "processing",
+  "step_description": "Processing document content",
+  "message": "Extracting content with optimized parameters...",
+  "elapsed_time": 2.45,
+  "estimated_time_remaining": 1.63,
+  "performance_stats": {
+    "page_count": 3,
+    "avg_page_processing_time": 0.82
+  },
+  "optimization_logs": [
+    {
+      "time": 1586543298.45,
+      "message": "Optimized worker count: 4 (based on 3 pages, 450.5KB avg page size)",
+      "type": "worker_optimization"
+    },
+    {
+      "time": 1586543298.46,
+      "message": "Optimized OCR DPI: 300",
+      "type": "dpi_optimization"
+    }
+  ]
+}</code></pre>
+        </section>
+        
+        <!-- Task Result -->
+        <section id="section-task-result" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">Get Task Result</h2>
+            <p>Get the results of a completed extraction task.</p>
+            
+            <h4>Request</h4>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td><strong>Method</strong></td>
+                        <td><code>GET</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>URL</strong></td>
+                        <td><code>/task-result/{task_id}</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Path Parameters</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>task_id</code></td>
+                        <td>String</td>
+                        <td>The ID of the completed task to get results for</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Response</h4>
+            <pre class="bg-dark text-light p-3 rounded"><code>{
+  "status": "success",
+  "task_id": "64e369fa-b47c-418c-b73e-30213c6cd1ab",
+  "content": {
+    "text": {
+      "all_text": "The full text content of the PDF...",
+      "pages": [
+        { "page_num": 1, "text": "Page 1 content..." },
+        { "page_num": 2, "text": "Page 2 content..." },
+        { "page_num": 3, "text": "Page 3 content..." }
+      ]
+    }
+  },
+  "execution_time": 4.08,
+  "message": "Successfully extracted content from 3 pages (4.08s)",
+  "optimization_logs": [
+    {
+      "time": 1586543298.45,
+      "message": "Optimized worker count: 4 (based on 3 pages, 450.5KB avg page size)",
+      "type": "worker_optimization"
+    },
+    {
+      "time": 1586543298.46,
+      "message": "Optimized OCR DPI: 300",
+      "type": "dpi_optimization"
+    }
+  ]
+}</code></pre>
+            
+            <div class="alert alert-warning mt-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                This endpoint will return a 400 error if the task is not yet completed. Always check the task progress first.
+            </div>
+        </section>
+        
+        <!-- Active Tasks -->
+        <section id="section-active-tasks" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">List Active Tasks</h2>
+            <p>Get a list of all active extraction tasks.</p>
+            
+            <h4>Request</h4>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td><strong>Method</strong></td>
+                        <td><code>GET</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>URL</strong></td>
+                        <td><code>/active-tasks</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Response</h4>
+            <pre class="bg-dark text-light p-3 rounded"><code>{
+  "active_tasks": [
+    {
+      "task_id": "64e369fa-b47c-418c-b73e-30213c6cd1ab",
+      "status": "processing",
+      "current_step": 75,
+      "total_steps": 100,
+      "percentage": 75.0,
+      "message": "Processing page 3 of 4..."
+    },
+    {
+      "task_id": "9a7b25cd-ef12-4893-bc45-7d8a12e9f561",
+      "status": "optimizing",
+      "current_step": 40,
+      "total_steps": 100,
+      "percentage": 40.0,
+      "message": "Optimizing extraction parameters..."
+    }
+  ]
+}</code></pre>
+        </section>
+        
+        <!-- Clear Cache -->
+        <section id="section-clear-cache" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">Clear Cache</h2>
+            <p>Clear all cached extraction results to free memory.</p>
+            
+            <h4>Request</h4>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td><strong>Method</strong></td>
+                        <td><code>POST</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>URL</strong></td>
+                        <td><code>/clear-cache</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Response</h4>
+            <pre class="bg-dark text-light p-3 rounded"><code>{
+  "status": "success",
+  "message": "All caches cleared successfully",
+  "items_removed": {
+    "extraction_cache": 12,
+    "download_cache": 5,
+    "ocr_cache": 8
+  }
+}</code></pre>
+        </section>
+        
+        <!-- Health Check -->
+        <section id="section-health" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">Health Check</h2>
+            <p>Check the health status of the API.</p>
+            
+            <h4>Request</h4>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td><strong>Method</strong></td>
+                        <td><code>GET</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>URL</strong></td>
+                        <td><code>/health</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Response</h4>
+            <pre class="bg-dark text-light p-3 rounded"><code>{
+  "status": "healthy",
+  "version": "1.0.0",
+  "uptime": 3600,
+  "memory_usage": {
+    "used_mb": 128.5,
+    "free_mb": 1024.0
+  },
+  "active_tasks": 2,
+  "cache_usage": {
+    "extraction_cache_size": 15,
+    "download_cache_size": 8
+  }
+}</code></pre>
+        </section>
+        
+        <!-- Code Samples -->
+        <section id="section-code-samples" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">Code Samples</h2>
+            
+            <h4>JavaScript (Browser)</h4>
+            <pre class="bg-dark text-light p-3 rounded"><code>// Example: Extract content from a PDF asynchronously with progress tracking
+async function extractPDFContent(fileInput) {
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+  formData.append('extraction_type', 'text');
+  formData.append('include_metadata', 'true');
+  formData.append('optimize_performance', 'true');
+  
+  // Start the extraction process
+  const response = await fetch('/extract-optimized', {
+    method: 'POST',
+    body: formData
+  });
+  
+  const result = await response.json();
+  const taskId = result.task_id;
+  
+  // Poll for progress
+  const interval = setInterval(async () => {
+    const progressResponse = await fetch(`/task-progress/${taskId}`);
+    const progressData = await progressResponse.json();
+    
+    // Update progress UI
+    updateProgressBar(progressData.percentage);
+    
+    if (progressData.status === 'completed') {
+      clearInterval(interval);
+      
+      // Get the final results
+      const resultResponse = await fetch(`/task-result/${taskId}`);
+      const extractionResult = await resultResponse.json();
+      
+      // Display or process the results
+      displayResults(extractionResult.content);
+    }
+  }, 1000);
+}</code></pre>
+            
+            <h4>Python</h4>
+            <pre class="bg-dark text-light p-3 rounded"><code>import requests
+import time
+
+def extract_pdf_from_url(pdf_url):
+    # Start extraction process with progress tracking
+    response = requests.post('http://localhost:8000/extract-optimized', json={
+        'pdf_url': pdf_url,
+        'extraction_type': 'structured',
+        'include_metadata': True,
+        'optimize_performance': True
+    })
+    
+    result = response.json()
+    task_id = result['task_id']
+    print(f"Extraction started with task ID: {task_id}")
+    
+    # Poll for progress
+    while True:
+        progress_response = requests.get(f'http://localhost:8000/task-progress/{task_id}')
+        progress_data = progress_response.json()
+        
+        print(f"Progress: {progress_data['percentage']}% - {progress_data['message']}")
+        
+        if progress_data['status'] == 'completed':
+            # Get the final results
+            result_response = requests.get(f'http://localhost:8000/task-result/{task_id}')
+            extraction_result = result_response.json()
+            
+            return extraction_result['content']
+        elif progress_data['status'] == 'error':
+            raise Exception(f"Extraction failed: {progress_data['message']}")
+        
+        time.sleep(1)
+
+# Example usage
+result = extract_pdf_from_url('https://example.com/sample.pdf')
+print(result['text']['all_text'])</code></pre>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Make active navigation item highlight
+    document.addEventListener('DOMContentLoaded', function() {
+        const links = document.querySelectorAll('.list-group-item-action');
+        
+        // Smooth scrolling for anchor links
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 20,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Update active class
+                    links.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+        
+        // Handle scroll events to update active section
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('section');
+            let currentSection = null;
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                
+                if (window.pageYOffset >= sectionTop - 100 && 
+                    window.pageYOffset < sectionTop + sectionHeight - 100) {
+                    currentSection = section.id;
+                }
+            });
+            
+            if (currentSection) {
+                links.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${currentSection}`) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

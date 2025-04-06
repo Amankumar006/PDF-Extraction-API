@@ -32,6 +32,10 @@ def index():
 
 @app.route('/api-docs')
 def api_docs():
+    return render_template('api_docs.html')
+
+@app.route('/swagger-ui')
+def swagger_ui():
     return redirect('http://localhost:8000/docs')
 
 @app.route('/extract', methods=['POST'])
