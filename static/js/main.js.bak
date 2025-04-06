@@ -1,0 +1,402 @@
+/**
+ * PDF Extraction API - Main JavaScript
+ * 
+ * This file contains the client-side JavaScript code for the PDF Extraction API demo.
+ */
+
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize form handlers
+    initializeUploadForm();
+    
+    // Add smooth scrolling for all links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+            
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                window.scrollTo({
+                    top: targetElement.offsetTop - 70, // Adjust for fixed header
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+    
+    // Tooltips initialization (if using Bootstrap tooltips)
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Copy results button functionality
+    const copyButton = document.getElementById('copy-results');
+    if (copyButton) {
+        copyButton.addEventListener('click', function() {
+            const resultsText = document.getElementById('results').textContent;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(resultsText).then(() => {
+                // Change button text temporarily
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+                
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+                showAlert('Failed to copy to clipboard', 'danger');
+            });
+        });
+    }
+});
+
+// Initialize the upload form and its animations
+function initializeUploadForm() {
+    const form = document.getElementById('upload-form');
+    if (!form) return;
+    
+    // Fun messages for different processing stages
+    const processingMessages = {
+        general: [
+            "Processing your PDF, hang tight...",
+            "Extracting all the juicy content...",
+            "PDF whisperer at work...",
+            "Turning PDF chaos into digital order...",
+            "Making your PDF spill its secrets..."
+        ],
+        text: [
+            "Finding all the text treasures in your PDF...",
+            "Converting PDF symbols into readable text...",
+            "Text extraction in progress, almost there...",
+            "Hunting for every last word in your document..."
+        ],
+        structured: [
+            "Identifying headings, paragraphs, and tables...",
+            "Creating a structured map of your document...",
+            "Organizing content into a beautiful structure...",
+            "Finding the hierarchical pattern in your PDF..."
+        ],
+        ocr: [
+            "OCR scanners activated! Reading image text...",
+            "Teaching the computer to read like a human...",
+            "Converting images to text, pixel by pixel...",
+            "OCR magic in progress, please be patient..."
+        ],
+        fast: [
+            "Speed mode activated! Processing at warp speed...",
+            "Parallel processors engaged for faster extraction...",
+            "Optimizing performance for quick results...",
+            "Turbo mode: sacrificing a bit of accuracy for speed..."
+        ]
+    };
+    
+    // Form submission handler
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const extractionType = formData.get('extraction_type') || 'text';
+        const file = formData.get('file');
+        const fastMode = formData.get('fast_mode') === 'true';
+        const useCache = formData.get('use_cache') === 'true';
+        const includeMetadata = formData.get('include_metadata') === 'true';
+        const includeImages = formData.get('include_images') === 'true';
+        const optimizePerformance = formData.get('optimize_performance') === 'true';
+        
+        if (!file || file.name === '') {
+            showAlert('Please select a PDF file to upload', 'warning');
+            return;
+        }
+        
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            showAlert('Only PDF files are supported', 'warning');
+            return;
+        }
+        
+        // Show the processing indicator with the appropriate animation
+        const processingIndicator = document.getElementById('processing-indicator');
+        const resultCard = document.getElementById('result-card');
+        const uploadBtn = document.getElementById('upload-btn');
+        const animationContainer = document.getElementById('pdf-animation-container');
+        const progressDetails = document.getElementById('progress-details');
+        
+        // Set animation class based on extraction type
+        animationContainer.className = 'pdf-animation-container animation-' + extractionType;
+        if (fastMode) {
+            animationContainer.classList.add('fast-mode');
+        }
+        
+        // Hide previous results and show processing animation
+        if (resultCard) resultCard.classList.add('d-none');
+        processingIndicator.classList.remove('d-none');
+        uploadBtn.disabled = true;
+        
+        // Make sure we have all the options in the form data
+        if (fastMode) formData.set('fast_mode', 'true');
+        formData.set('use_cache', useCache ? 'true' : 'false');
+        formData.set('include_metadata', includeMetadata ? 'true' : 'false');
+        formData.set('include_images', includeImages ? 'true' : 'false');
+        formData.set('optimize_performance', optimizePerformance ? 'true' : 'false');
+        
+        // Determine if we should use the optimized endpoint with progress tracking
+        const useOptimizedEndpoint = optimizePerformance;
+        
+        if (useOptimizedEndpoint) {
+            // Use the optimized endpoint with progress tracking
+            fetch('/extract-optimized', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'processing' && data.task_id) {
+                    // Show progress details for real-time tracking
+                    progressDetails.classList.remove('d-none');
+                    
+                    // Start polling for progress updates
+                    startProgressPolling(data.task_id, extractionType, fastMode);
+                } else if (data.status === 'error') {
+                    // Handle immediate error
+                    throw new Error(data.message || 'An error occurred while starting the extraction process');
+                } else {
+                    // Handle unexpected response
+                    throw new Error('Invalid response from server');
+                }
+            })
+            .catch(error => {
+                console.error('Error starting optimized extraction:', error);
+                processingIndicator.classList.add('d-none');
+                progressDetails.classList.add('d-none');
+                uploadBtn.disabled = false;
+                showAlert(`Error: ${error.message || 'An error occurred while starting the extraction process'}`, 'danger');
+            });
+        } else {
+            // Use the regular endpoint without progress tracking
+            // Start the progress animation (simulated)
+            startProgressAnimation(extractionType, fastMode);
+            
+            // Cycle through fun messages during processing
+            startMessageCycling(extractionType, fastMode);
+            
+            // Send the request to the API endpoint
+            fetch('/extract', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Hide processing indicator and enable button
+                processingIndicator.classList.add('d-none');
+                uploadBtn.disabled = false;
+                
+                // Display the results
+                if (data.status === 'success' || data.content) {
+                    displayResults(data);
+                } else {
+                    showAlert(data.message || 'An error occurred while processing the PDF', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading file:', error);
+                processingIndicator.classList.add('d-none');
+                uploadBtn.disabled = false;
+                showAlert(`Error: ${error.message || 'An error occurred while uploading the file'}`, 'danger');
+            });
+        }
+    });
+}
+
+// Start the progress bar animation
+function startProgressAnimation(extractionType, fastMode = false) {
+    const progressBar = document.getElementById('processing-progress');
+    if (!progressBar) return;
+    
+    // Reset progress
+    progressBar.style.width = '0%';
+    
+    // Set color based on extraction type
+    progressBar.className = 'progress-bar progress-bar-striped progress-bar-animated';
+    
+    switch (extractionType) {
+        case 'text':
+            progressBar.classList.add('bg-success');
+            break;
+        case 'structured':
+            progressBar.classList.add('bg-warning');
+            break;
+        case 'ocr':
+            progressBar.classList.add('bg-purple');
+            break;
+        default:
+            progressBar.classList.add('bg-primary');
+    }
+    
+    // Simulate progress - adjust timing based on extraction type and fast mode
+    let duration = 10000; // Default duration: 10 seconds
+    
+    if (extractionType === 'ocr') {
+        duration = fastMode ? 12000 : 20000; // OCR is slower
+    } else if (extractionType === 'structured') {
+        duration = fastMode ? 5000 : 10000;
+    } else { // text extraction
+        duration = fastMode ? 3000 : 6000;
+    }
+    
+    const interval = 100;
+    const steps = duration / interval;
+    let currentStep = 0;
+    
+    const progressInterval = setInterval(() => {
+        currentStep++;
+        const progress = Math.min(95, (currentStep / steps) * 100);
+        progressBar.style.width = `${progress}%`;
+        
+        if (currentStep >= steps) {
+            clearInterval(progressInterval);
+        }
+    }, interval);
+    
+    // Store interval ID to clear if needed
+    window.currentProgressInterval = progressInterval;
+}
+
+// Cycle through fun messages during processing
+function startMessageCycling(extractionType, fastMode = false) {
+    const messageElement = document.getElementById('processing-message');
+    if (!messageElement) return;
+    
+    // Fun messages for different extraction types
+    const processingMessages = {
+        general: [
+            "Processing your PDF, hang tight...",
+            "Extracting all the juicy content...",
+            "PDF whisperer at work...",
+            "Turning PDF chaos into digital order...",
+            "Making your PDF spill its secrets..."
+        ],
+        text: [
+            "Finding all the text treasures in your PDF...",
+            "Converting PDF symbols into readable text...",
+            "Text extraction in progress, almost there...",
+            "Hunting for every last word in your document..."
+        ],
+        structured: [
+            "Identifying headings, paragraphs, and tables...",
+            "Creating a structured map of your document...",
+            "Organizing content into a beautiful structure...",
+            "Finding the hierarchical pattern in your PDF..."
+        ],
+        ocr: [
+            "OCR scanners activated! Reading image text...",
+            "Teaching the computer to read like a human...",
+            "Converting images to text, pixel by pixel...",
+            "OCR magic in progress, please be patient..."
+        ],
+        fast: [
+            "Speed mode activated! Processing at warp speed...",
+            "Parallel processors engaged for faster extraction...",
+            "Optimizing performance for quick results...",
+            "Turbo mode: sacrificing a bit of accuracy for speed..."
+        ]
+    };
+    
+    // Get messages for the current extraction type and fast mode
+    const typeMessages = processingMessages[extractionType] || processingMessages.general;
+    let allMessages = [...typeMessages, ...processingMessages.general];
+    
+    // Add fast mode messages if applicable
+    if (fastMode) {
+        allMessages = [...processingMessages.fast, ...allMessages];
+    }
+    
+    // Start with a type-specific message or fast mode message
+    let currentIndex = 0;
+    messageElement.textContent = fastMode ? processingMessages.fast[0] : typeMessages[0];
+    
+    // Change messages every 3 seconds (or 2 seconds in fast mode)
+    const messageInterval = setInterval(() => {
+        currentIndex = (currentIndex + 1) % allMessages.length;
+        messageElement.textContent = allMessages[currentIndex];
+    }, fastMode ? 2000 : 3000);
+    
+    // Store interval ID to clear if needed
+    window.currentMessageInterval = messageInterval;
+}
+
+// Display the results
+function displayResults(data) {
+    const resultCard = document.getElementById('result-card');
+    const resultsContainer = document.getElementById('results');
+    const executionTimeSpan = document.getElementById('execution-time');
+    
+    if (!resultCard || !resultsContainer) return;
+    
+    // Format and display the JSON
+    resultsContainer.textContent = formatJSON(data);
+    resultCard.classList.remove('d-none');
+    
+    // Show execution time if available
+    if (executionTimeSpan && data.execution_time) {
+        const time = Math.round(data.execution_time * 100) / 100; // Round to 2 decimal places
+        executionTimeSpan.textContent = `Execution time: ${time}s`;
+    } else if (executionTimeSpan) {
+        executionTimeSpan.textContent = '';
+    }
+    
+    // Scroll to results
+    resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Clear any ongoing animations
+    if (window.currentProgressInterval) clearInterval(window.currentProgressInterval);
+    if (window.currentMessageInterval) clearInterval(window.currentMessageInterval);
+}
+
+// Utility function to format JSON for display
+window.formatJSON = function(json) {
+    if (typeof json === 'string') {
+        try {
+            json = JSON.parse(json);
+        } catch (e) {
+            return json;
+        }
+    }
+    return JSON.stringify(json, null, 2);
+};
+
+// Utility function to show alerts
+window.showAlert = function(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insert at the top of the main content
+    const mainContent = document.querySelector('main.container');
+    if (mainContent) {
+        mainContent.insertBefore(alertDiv, mainContent.firstChild);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            alertDiv.classList.remove('show');
+            setTimeout(() => alertDiv.remove(), 150);
+        }, 5000);
+    }
+};

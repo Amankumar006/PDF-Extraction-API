@@ -154,4 +154,166 @@ def clear_cache():
             "message": str(e)
         }), 500
 
+@app.route('/extract-optimized', methods=['POST'])
+def extract_optimized():
+    """Extract content with progress tracking and performance optimization."""
+    if 'file' not in request.files and not request.json:
+        return jsonify({
+            "status": "error",
+            "message": "Either a file upload or a JSON payload with pdf_url is required"
+        }), 400
+    
+    try:
+        if 'file' in request.files:
+            # Handle file upload
+            file = request.files['file']
+            
+            if file.filename == '':
+                return jsonify({
+                    "status": "error",
+                    "message": "No file selected"
+                }), 400
+            
+            if not file.filename.lower().endswith('.pdf'):
+                return jsonify({
+                    "status": "error",
+                    "message": "Only PDF files are supported"
+                }), 400
+            
+            # Set up the multipart form data
+            files = {'file': (file.filename, file.read(), 'application/pdf')}
+            
+            # Extract form parameters
+            extraction_type = request.form.get('extraction_type', 'text')
+            include_images = request.form.get('include_images') == 'true'
+            include_metadata = request.form.get('include_metadata') == 'true'
+            fast_mode = request.form.get('fast_mode') == 'true'
+            use_cache = request.form.get('use_cache', 'true') == 'true'
+            optimize_performance = request.form.get('optimize_performance', 'true') == 'true'
+            
+            # Call the optimized extraction endpoint
+            api_response = requests.post(
+                f"{API_URL}/extract-optimized",
+                files=files,
+                data={
+                    'extraction_type': extraction_type,
+                    'include_images': str(include_images).lower(),
+                    'include_metadata': str(include_metadata).lower(),
+                    'fast_mode': str(fast_mode).lower(),
+                    'use_cache': str(use_cache).lower(),
+                    'optimize_performance': str(optimize_performance).lower()
+                }
+            )
+        else:
+            # Handle JSON payload with URL
+            data = request.json
+            if not data.get('pdf_url'):
+                return jsonify({
+                    "status": "error",
+                    "message": "PDF URL is required in the JSON payload"
+                }), 400
+            
+            # Call the optimized extraction endpoint
+            api_response = requests.post(
+                f"{API_URL}/extract-optimized",
+                json=data
+            )
+        
+        # Check if the request was successful
+        api_response.raise_for_status()
+        
+        # Return the task ID and status
+        return api_response.json()
+        
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error forwarding request to API: {e}")
+        return jsonify({
+            "status": "error",
+            "message": f"API service error: {str(e)}"
+        }), 500
+    except Exception as e:
+        logger.error(f"Error in optimized extraction: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.route('/task-progress/<task_id>', methods=['GET'])
+def get_task_progress(task_id):
+    """Get the progress of a PDF extraction task."""
+    try:
+        # Forward the request to FastAPI endpoint
+        api_response = requests.get(f"{API_URL}/task-progress/{task_id}")
+        
+        # Check if the request was successful
+        api_response.raise_for_status()
+        
+        # Return the response as JSON
+        return api_response.json()
+        
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error forwarding request to API: {e}")
+        return jsonify({
+            "status": "error",
+            "message": f"API service error: {str(e)}"
+        }), 500
+    except Exception as e:
+        logger.error(f"Error getting task progress: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.route('/active-tasks', methods=['GET'])
+def list_active_tasks():
+    """List all active extraction tasks."""
+    try:
+        # Forward the request to FastAPI endpoint
+        api_response = requests.get(f"{API_URL}/active-tasks")
+        
+        # Check if the request was successful
+        api_response.raise_for_status()
+        
+        # Return the response as JSON
+        return api_response.json()
+        
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error forwarding request to API: {e}")
+        return jsonify({
+            "status": "error",
+            "message": f"API service error: {str(e)}"
+        }), 500
+    except Exception as e:
+        logger.error(f"Error listing active tasks: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.route('/task-result/<task_id>', methods=['GET'])
+def get_task_result(task_id):
+    """Get the result of a completed extraction task."""
+    try:
+        # Forward the request to FastAPI endpoint
+        api_response = requests.get(f"{API_URL}/task-result/{task_id}")
+        
+        # Check if the request was successful
+        api_response.raise_for_status()
+        
+        # Return the response as JSON
+        return api_response.json()
+        
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error forwarding request to API: {e}")
+        return jsonify({
+            "status": "error",
+            "message": f"API service error: {str(e)}"
+        }), 500
+    except Exception as e:
+        logger.error(f"Error getting task result: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
 # The FastAPI server is now started from main.py

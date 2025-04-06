@@ -1,100 +1,7 @@
-/**
- * PDF Extraction API - Main JavaScript
- * 
- * This file contains the client-side JavaScript code for the PDF Extraction API demo.
- */
-
-// Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize form handlers
-    initializeUploadForm();
-    
-    // Add smooth scrolling for all links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const targetId = this.getAttribute('href');
-            if (targetId === '#') return;
-            
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                window.scrollTo({
-                    top: targetElement.offsetTop - 70, // Adjust for fixed header
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
-    
-    // Tooltips initialization (if using Bootstrap tooltips)
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-    
-    // Copy results button functionality
-    const copyButton = document.getElementById('copy-results');
-    if (copyButton) {
-        copyButton.addEventListener('click', function() {
-            const resultsText = document.getElementById('results').textContent;
-            
-            // Copy to clipboard
-            navigator.clipboard.writeText(resultsText).then(() => {
-                // Change button text temporarily
-                const originalText = this.innerHTML;
-                this.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
-                
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                }, 2000);
-            }).catch(err => {
-                console.error('Could not copy text: ', err);
-                showAlert('Failed to copy to clipboard', 'danger');
-            });
-        });
-    }
-});
-
-// Initialize the upload form and its animations
-function initializeUploadForm() {
+    // Get the elements we need to interact with
     const form = document.getElementById('upload-form');
-    if (!form) return;
-    
-    // Fun messages for different processing stages
-    const processingMessages = {
-        general: [
-            "Processing your PDF, hang tight...",
-            "Extracting all the juicy content...",
-            "PDF whisperer at work...",
-            "Turning PDF chaos into digital order...",
-            "Making your PDF spill its secrets..."
-        ],
-        text: [
-            "Finding all the text treasures in your PDF...",
-            "Converting PDF symbols into readable text...",
-            "Text extraction in progress, almost there...",
-            "Hunting for every last word in your document..."
-        ],
-        structured: [
-            "Identifying headings, paragraphs, and tables...",
-            "Creating a structured map of your document...",
-            "Organizing content into a beautiful structure...",
-            "Finding the hierarchical pattern in your PDF..."
-        ],
-        ocr: [
-            "OCR scanners activated! Reading image text...",
-            "Teaching the computer to read like a human...",
-            "Converting images to text, pixel by pixel...",
-            "OCR magic in progress, please be patient..."
-        ],
-        fast: [
-            "Speed mode activated! Processing at warp speed...",
-            "Parallel processors engaged for faster extraction...",
-            "Optimizing performance for quick results...",
-            "Turbo mode: sacrificing a bit of accuracy for speed..."
-        ]
-    };
+    const copyBtn = document.getElementById('copy-results');
     
     // Form submission handler
     form.addEventListener('submit', function(e) {
@@ -107,6 +14,7 @@ function initializeUploadForm() {
         const useCache = formData.get('use_cache') === 'true';
         const includeMetadata = formData.get('include_metadata') === 'true';
         const includeImages = formData.get('include_images') === 'true';
+        const optimizePerformance = formData.get('optimize_performance') === 'true';
         
         if (!file || file.name === '') {
             showAlert('Please select a PDF file to upload', 'warning');
@@ -123,6 +31,7 @@ function initializeUploadForm() {
         const resultCard = document.getElementById('result-card');
         const uploadBtn = document.getElementById('upload-btn');
         const animationContainer = document.getElementById('pdf-animation-container');
+        const progressDetails = document.getElementById('progress-details');
         
         // Set animation class based on extraction type
         animationContainer.className = 'pdf-animation-container animation-' + extractionType;
@@ -135,225 +44,286 @@ function initializeUploadForm() {
         processingIndicator.classList.remove('d-none');
         uploadBtn.disabled = true;
         
-        // Start the progress animation
-        startProgressAnimation(extractionType, fastMode);
-        
-        // Cycle through fun messages during processing
-        startMessageCycling(extractionType, fastMode);
-        
         // Make sure we have all the options in the form data
         if (fastMode) formData.set('fast_mode', 'true');
         formData.set('use_cache', useCache ? 'true' : 'false');
         formData.set('include_metadata', includeMetadata ? 'true' : 'false');
         formData.set('include_images', includeImages ? 'true' : 'false');
+        formData.set('optimize_performance', optimizePerformance ? 'true' : 'false');
         
-        // Send the request to the FastAPI endpoint
-        fetch('/extract', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Hide processing indicator and enable button
-            processingIndicator.classList.add('d-none');
-            uploadBtn.disabled = false;
+        // Determine if we should use the optimized endpoint with progress tracking
+        const useOptimizedEndpoint = optimizePerformance;
+        
+        // Check if we're using the optimized extraction with progress tracking
+        if (useOptimizedEndpoint) {
+            // Use the optimized endpoint with progress tracking
+            fetch('/extract-optimized', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'processing' && data.task_id) {
+                    // Show progress details for real-time tracking
+                    progressDetails.classList.remove('d-none');
+                    
+                    // Start polling for progress updates
+                    startProgressPolling(data.task_id, extractionType, fastMode);
+                } else if (data.status === 'error') {
+                    // Handle immediate error
+                    throw new Error(data.message || 'An error occurred while starting the extraction process');
+                } else {
+                    // Handle unexpected response
+                    throw new Error('Invalid response from server');
+                }
+            })
+            .catch(error => {
+                console.error('Error starting optimized extraction:', error);
+                processingIndicator.classList.add('d-none');
+                progressDetails.classList.add('d-none');
+                uploadBtn.disabled = false;
+                showAlert(`Error: ${error.message || 'An error occurred while starting the extraction process'}`, 'danger');
+            });
+        } else {
+            // Use the regular endpoint without progress tracking
+            // Start the progress animation (simulated)
+            startProgressAnimation(extractionType, fastMode);
             
-            // Display the results
-            if (data.status === 'success' || data.content) {
-                displayResults(data);
-            } else {
-                showAlert(data.message || 'An error occurred while processing the PDF', 'danger');
-            }
-        })
-        .catch(error => {
-            console.error('Error uploading file:', error);
-            processingIndicator.classList.add('d-none');
-            uploadBtn.disabled = false;
-            showAlert(`Error: ${error.message || 'An error occurred while uploading the file'}`, 'danger');
-        });
-    });
-}
-
-// Start the progress bar animation
-function startProgressAnimation(extractionType, fastMode = false) {
-    const progressBar = document.getElementById('processing-progress');
-    if (!progressBar) return;
-    
-    // Reset progress
-    progressBar.style.width = '0%';
-    
-    // Set color based on extraction type
-    progressBar.className = 'progress-bar progress-bar-striped progress-bar-animated';
-    
-    switch (extractionType) {
-        case 'text':
-            progressBar.classList.add('bg-success');
-            break;
-        case 'structured':
-            progressBar.classList.add('bg-warning');
-            break;
-        case 'ocr':
-            progressBar.classList.add('bg-purple');
-            break;
-        default:
-            progressBar.classList.add('bg-primary');
-    }
-    
-    // Simulate progress - adjust timing based on extraction type and fast mode
-    let duration = 10000; // Default duration: 10 seconds
-    
-    if (extractionType === 'ocr') {
-        duration = fastMode ? 12000 : 20000; // OCR is slower
-    } else if (extractionType === 'structured') {
-        duration = fastMode ? 5000 : 10000;
-    } else { // text extraction
-        duration = fastMode ? 3000 : 6000;
-    }
-    
-    const interval = 100;
-    const steps = duration / interval;
-    let currentStep = 0;
-    
-    const progressInterval = setInterval(() => {
-        currentStep++;
-        const progress = Math.min(95, (currentStep / steps) * 100);
-        progressBar.style.width = `${progress}%`;
-        
-        if (currentStep >= steps) {
-            clearInterval(progressInterval);
+            // Cycle through fun messages during processing
+            startMessageCycling(extractionType, fastMode);
+            
+            // Send the request to the API endpoint
+            fetch('/extract', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Hide processing indicator and enable button
+                processingIndicator.classList.add('d-none');
+                uploadBtn.disabled = false;
+                
+                // Display the results
+                if (data.status === 'success' || data.content) {
+                    displayResults(data);
+                } else {
+                    showAlert(data.message || 'An error occurred while processing the PDF', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading file:', error);
+                processingIndicator.classList.add('d-none');
+                uploadBtn.disabled = false;
+                showAlert(`Error: ${error.message || 'An error occurred while uploading the file'}`, 'danger');
+            });
         }
-    }, interval);
+    });
     
-    // Store interval ID to clear if needed
-    window.currentProgressInterval = progressInterval;
-}
-
-// Cycle through fun messages during processing
-function startMessageCycling(extractionType, fastMode = false) {
-    const messageElement = document.getElementById('processing-message');
-    if (!messageElement) return;
+    // Copy button handler
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            const resultsElement = document.getElementById('results');
+            if (resultsElement) {
+                try {
+                    // Create a temporary text area to copy from
+                    const textarea = document.createElement('textarea');
+                    textarea.value = resultsElement.textContent;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    // Show success message
+                    showAlert('Results copied to clipboard!', 'success');
+                } catch (e) {
+                    console.error('Error copying text:', e);
+                    showAlert('Failed to copy results', 'danger');
+                }
+            }
+        });
+    }
     
-    // Fun messages for different extraction types
-    const processingMessages = {
-        general: [
-            "Processing your PDF, hang tight...",
-            "Extracting all the juicy content...",
-            "PDF whisperer at work...",
-            "Turning PDF chaos into digital order...",
-            "Making your PDF spill its secrets..."
-        ],
-        text: [
-            "Finding all the text treasures in your PDF...",
-            "Converting PDF symbols into readable text...",
-            "Text extraction in progress, almost there...",
-            "Hunting for every last word in your document..."
-        ],
-        structured: [
-            "Identifying headings, paragraphs, and tables...",
-            "Creating a structured map of your document...",
-            "Organizing content into a beautiful structure...",
-            "Finding the hierarchical pattern in your PDF..."
-        ],
-        ocr: [
-            "OCR scanners activated! Reading image text...",
-            "Teaching the computer to read like a human...",
-            "Converting images to text, pixel by pixel...",
-            "OCR magic in progress, please be patient..."
-        ],
-        fast: [
-            "Speed mode activated! Processing at warp speed...",
-            "Parallel processors engaged for faster extraction...",
-            "Optimizing performance for quick results...",
-            "Turbo mode: sacrificing a bit of accuracy for speed..."
-        ]
+    // Function to display alerts
+    window.showAlert = function(message, type = 'info') {
+        const alertsContainer = document.getElementById('alerts-container') || createAlertsContainer();
+        
+        // Create the alert element
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Add the alert to the container
+        alertsContainer.appendChild(alert);
+        
+        // Remove the alert after 5 seconds
+        setTimeout(function() {
+            if (alert.parentNode) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
+        }, 5000);
     };
     
-    // Get messages for the current extraction type and fast mode
-    const typeMessages = processingMessages[extractionType] || processingMessages.general;
-    let allMessages = [...typeMessages, ...processingMessages.general];
-    
-    // Add fast mode messages if applicable
-    if (fastMode) {
-        allMessages = [...processingMessages.fast, ...allMessages];
+    // Create alerts container if it doesn't exist
+    function createAlertsContainer() {
+        const container = document.createElement('div');
+        container.id = 'alerts-container';
+        container.className = 'position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '5000';
+        document.body.appendChild(container);
+        return container;
     }
     
-    // Start with a type-specific message or fast mode message
-    let currentIndex = 0;
-    messageElement.textContent = fastMode ? processingMessages.fast[0] : typeMessages[0];
-    
-    // Change messages every 3 seconds (or 2 seconds in fast mode)
-    const messageInterval = setInterval(() => {
-        currentIndex = (currentIndex + 1) % allMessages.length;
-        messageElement.textContent = allMessages[currentIndex];
-    }, fastMode ? 2000 : 3000);
-    
-    // Store interval ID to clear if needed
-    window.currentMessageInterval = messageInterval;
-}
-
-// Display the results
-function displayResults(data) {
-    const resultCard = document.getElementById('result-card');
-    const resultsContainer = document.getElementById('results');
-    const executionTimeSpan = document.getElementById('execution-time');
-    
-    if (!resultCard || !resultsContainer) return;
-    
-    // Format and display the JSON
-    resultsContainer.textContent = formatJSON(data);
-    resultCard.classList.remove('d-none');
-    
-    // Show execution time if available
-    if (executionTimeSpan && data.execution_time) {
-        const time = Math.round(data.execution_time * 100) / 100; // Round to 2 decimal places
-        executionTimeSpan.textContent = `Execution time: ${time}s`;
-    } else if (executionTimeSpan) {
-        executionTimeSpan.textContent = '';
-    }
-    
-    // Scroll to results
-    resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    
-    // Clear any ongoing animations
-    if (window.currentProgressInterval) clearInterval(window.currentProgressInterval);
-    if (window.currentMessageInterval) clearInterval(window.currentMessageInterval);
-}
-
-// Utility function to format JSON for display
-window.formatJSON = function(json) {
-    if (typeof json === 'string') {
-        try {
-            json = JSON.parse(json);
-        } catch (e) {
-            return json;
-        }
-    }
-    return JSON.stringify(json, null, 2);
-};
-
-// Utility function to show alerts
-window.showAlert = function(message, type = 'info') {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    // Insert at the top of the main content
-    const mainContent = document.querySelector('main.container');
-    if (mainContent) {
-        mainContent.insertBefore(alertDiv, mainContent.firstChild);
+    // Function to display the results
+    window.displayResults = function(data) {
+        const resultCard = document.getElementById('result-card');
+        const resultsElement = document.getElementById('results');
+        const executionTimeElement = document.getElementById('execution-time');
         
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-            alertDiv.classList.remove('show');
-            setTimeout(() => alertDiv.remove(), 150);
-        }, 5000);
-    }
-};
+        if (resultCard && resultsElement) {
+            // Format the content for display
+            let formattedContent;
+            
+            try {
+                if (typeof data.content === 'object') {
+                    formattedContent = JSON.stringify(data.content, null, 2);
+                } else if (typeof data.content === 'string') {
+                    formattedContent = data.content;
+                } else {
+                    formattedContent = JSON.stringify(data, null, 2);
+                }
+            } catch (e) {
+                console.error('Error formatting content:', e);
+                formattedContent = String(data.content || 'Error formatting content');
+            }
+            
+            // Set the content
+            resultsElement.textContent = formattedContent;
+            
+            // Set execution time if available
+            if (executionTimeElement && data.execution_time) {
+                executionTimeElement.textContent = `Processing time: ${data.execution_time.toFixed(2)}s`;
+            } else if (executionTimeElement) {
+                executionTimeElement.textContent = '';
+            }
+            
+            // Show the result card
+            resultCard.classList.remove('d-none');
+            
+            // Scroll to the results
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+    
+    // Function to start the simulated progress animation
+    window.startProgressAnimation = function(extractionType, fastMode) {
+        const progressBar = document.getElementById('processing-progress');
+        
+        if (progressBar) {
+            progressBar.style.width = '0%';
+            
+            const duration = fastMode ? 1500 : 3000; // Fast mode is faster
+            const steps = 100;
+            const interval = duration / steps;
+            
+            let current = 0;
+            
+            const animation = setInterval(() => {
+                current += 1;
+                
+                // Simulate a non-linear progress
+                let progress;
+                if (current <= 20) {
+                    // Start slow (initial loading)
+                    progress = current * 0.5;
+                } else if (current <= 80) {
+                    // Middle is faster (processing)
+                    progress = 10 + (current - 20) * 1.0;
+                } else {
+                    // End slows down again (saving results)
+                    progress = 70 + (current - 80) * 0.3;
+                }
+                
+                // Max progress is 90% for simulated animation
+                // The last 10% is added when we get the result
+                progress = Math.min(progress, 90);
+                
+                progressBar.style.width = `${progress}%`;
+                
+                if (current >= steps) {
+                    clearInterval(animation);
+                }
+            }, interval);
+        }
+    };
+    
+    // Function to cycle through fun messages during processing
+    window.startMessageCycling = function(extractionType, fastMode) {
+        const messageElement = document.getElementById('processing-message');
+        
+        // Different message sets based on extraction type
+        const messages = {
+            text: [
+                "Scanning those tiny letters...",
+                "Reading between the lines...",
+                "Extracting all the words...",
+                "Finding those important paragraphs...",
+                "Organizing the text content..."
+            ],
+            structured: [
+                "Analyzing document structure...",
+                "Detecting headings and sections...",
+                "Identifying tables and lists...",
+                "Mapping document hierarchy...",
+                "Building structured content..."
+            ],
+            ocr: [
+                "Warming up the OCR engine...",
+                "Teaching the computer to read...",
+                "Converting images to text...",
+                "Deciphering those scanned pages...",
+                "Recognizing characters and words..."
+            ]
+        };
+        
+        // Choose the right message set
+        const messageSet = messages[extractionType] || messages.text;
+        
+        // Set initial message
+        if (messageElement) {
+            messageElement.textContent = messageSet[0];
+            
+            // Determine cycle speed based on fast mode
+            const interval = fastMode ? 2000 : 3500;
+            
+            let index = 1;
+            
+            // Cycle through messages
+            const messageInterval = setInterval(() => {
+                if (index < messageSet.length) {
+                    messageElement.textContent = messageSet[index];
+                    index++;
+                } else {
+                    // Stop cycling after going through all messages once
+                    clearInterval(messageInterval);
+                }
+            }, interval);
+            
+            // Store the interval ID on the window to clear it later if needed
+            window.currentMessageInterval = messageInterval;
+        }
+    };
+});
