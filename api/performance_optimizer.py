@@ -94,6 +94,11 @@ class ProgressTracker:
             "optimization_logs": self.optimization_logs
         }
         
+        # Include result_data if it exists in the current store
+        current_data = progress_store.get(self.task_id, {})
+        if "result_data" in current_data:
+            progress_data["result_data"] = current_data["result_data"]
+        
         progress_store[self.task_id] = progress_data
         
         # If task is completed or errored, remove it from active tasks after a delay
@@ -113,6 +118,17 @@ class ProgressTracker:
             "message": message,
             "type": optimization_type
         })
+    
+    def set_result_data(self, result_data: Dict[str, Any]) -> None:
+        """Store the final extraction result data in the progress tracker."""
+        # Get current progress data from store
+        current_data = progress_store.get(self.task_id, {})
+        
+        # Add the result data
+        current_data["result_data"] = result_data
+        
+        # Update the store
+        progress_store[self.task_id] = current_data
     
     def get_progress_data(self) -> Dict[str, Any]:
         """Get the current progress data."""

@@ -722,6 +722,9 @@ async def process_pdf_with_progress(
                 progress_tracker.add_performance_stat("execution_time", result.get("execution_time", 0))
                 progress_tracker.add_performance_stat("page_count", page_count)
                 
+                # Store the extraction result data for later retrieval
+                progress_tracker.set_result_data(result)
+                
                 # Mark as complete
                 progress_tracker.complete(
                     message=f"Successfully extracted content from {page_count} pages "
@@ -869,13 +872,15 @@ async def get_task_result(task_id: str):
             detail=f"Task with ID {task_id} is not completed yet"
         )
     
-    # Get performance stats
+    # Get performance stats and result data
     performance_stats = progress_data.get("performance_stats", {})
+    result_data = progress_data.get("result_data", {})
     
-    # Return a formatted response with just the necessary data
+    # Return a formatted response with the necessary data
     return {
         "status": "success",
         "task_id": task_id,
+        "content": result_data,  # Include the actual content
         "execution_time": performance_stats.get("execution_time"),
         "message": progress_data.get("message"),
         "optimization_logs": progress_data.get("optimization_logs")
