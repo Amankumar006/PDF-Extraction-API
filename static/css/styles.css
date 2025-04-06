@@ -1,0 +1,339 @@
+/* PDF Extraction API - Custom Styles */
+
+/* General styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Card styles */
+.card {
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Form styles */
+.form-control:focus, .btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* File input styling */
+.form-control[type="file"] {
+    padding: 0.375rem 0.75rem;
+}
+
+/* Pre/code formatting */
+pre {
+    border-radius: 0.375rem;
+    max-height: 400px;
+    overflow: auto;
+}
+
+pre code {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Navbar styling */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand i {
+    font-size: 1.25rem;
+}
+
+/* Footer styling */
+footer {
+    margin-top: auto;
+}
+
+footer a {
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Feature list styling */
+.list-unstyled i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Processing indicator */
+#processing-indicator {
+    padding: 2rem 0;
+}
+
+/* PDF Animation Container */
+.pdf-animation-container {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 1.5rem;
+    position: relative;
+}
+
+/* PDF Document Animation */
+.pdf-document {
+    width: 90px;
+    height: 110px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    position: absolute;
+    top: 20px;
+    left: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: floatAnimation 3s ease-in-out infinite;
+}
+
+.pdf-document::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: #dc3545;
+    top: 0;
+    right: 0;
+    border-bottom-left-radius: 10px;
+}
+
+.pdf-document::after {
+    content: '';
+    position: absolute;
+    width: 70%;
+    height: 8px;
+    background-color: #adb5bd;
+    top: 30px;
+    left: 10px;
+    border-radius: 4px;
+    box-shadow: 0 18px 0 #adb5bd, 0 36px 0 #adb5bd, 0 54px 0 #adb5bd;
+    animation: scanAnimation 2s linear infinite;
+}
+
+/* Scanning Animation */
+.pdf-scanner {
+    width: 90px;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, #007bff, transparent);
+    position: absolute;
+    top: 20px;
+    left: 30px;
+    z-index: 10;
+    animation: scanMove 2.5s cubic-bezier(0.645, 0.045, 0.355, 1) infinite;
+}
+
+/* Speech Bubble for OCR */
+.ocr-bubble {
+    position: absolute;
+    width: 80px;
+    height: 25px;
+    background-color: #6c757d;
+    color: white;
+    font-size: 10px;
+    border-radius: 12px;
+    top: 5px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: bubbleAppear 4s ease-in-out infinite;
+}
+
+.ocr-bubble::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 8px solid #6c757d;
+    bottom: -7px;
+    left: 15px;
+}
+
+/* Text Extraction Animation */
+.text-extract {
+    position: absolute;
+    color: #007bff;
+    font-size: 11px;
+    font-family: monospace;
+    right: 10px;
+    top: 55px;
+    width: 35px;
+    overflow: hidden;
+    opacity: 0;
+    animation: textAppear 3s ease-in-out infinite 0.5s;
+}
+
+/* PDF Flying Pages Animation */
+.flying-page {
+    position: absolute;
+    width: 30px;
+    height: 40px;
+    background-color: #e9ecef;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+}
+
+.flying-page:nth-child(1) {
+    top: 50px;
+    right: 20px;
+    animation: flyPage 2.5s ease-in-out infinite 0.2s;
+}
+
+.flying-page:nth-child(2) {
+    top: 60px;
+    right: 15px;
+    animation: flyPage 2.5s ease-in-out infinite 0.4s;
+}
+
+.flying-page:nth-child(3) {
+    top: 70px;
+    right: 10px;
+    animation: flyPage 2.5s ease-in-out infinite 0.6s;
+}
+
+/* Animation Keyframes */
+@keyframes floatAnimation {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+}
+
+@keyframes scanAnimation {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+}
+
+@keyframes scanMove {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(106px); }
+}
+
+@keyframes bubbleAppear {
+    0%, 20%, 80%, 100% { opacity: 0; }
+    30%, 70% { opacity: 1; }
+}
+
+@keyframes textAppear {
+    0%, 20%, 80%, 100% { 
+        opacity: 0;
+        width: 0;
+    }
+    30%, 70% { 
+        opacity: 1;
+        width: 35px;
+    }
+}
+
+@keyframes flyPage {
+    0% {
+        opacity: 0;
+        transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50px, -40px) rotate(-15deg);
+    }
+}
+
+/* Animation Type Specific */
+.animation-text .pdf-scanner {
+    background: linear-gradient(90deg, transparent, #20c997, transparent);
+}
+
+.animation-structured .pdf-scanner {
+    background: linear-gradient(90deg, transparent, #fd7e14, transparent);
+}
+
+.animation-ocr .pdf-scanner {
+    background: linear-gradient(90deg, transparent, #6f42c1, transparent);
+}
+
+/* Results container */
+#results {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.875rem;
+}
+
+/* Button transitions */
+.btn {
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .lead {
+        font-size: 1.1rem;
+    }
+}
+
+/* Custom purple color for OCR */
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+/* Making sure the OCR bubble stands out in dark mode */
+.ocr-bubble {
+    background-color: #6f42c1;
+    font-weight: bold;
+}
+
+/* Fast Mode Styles */
+.fast-mode .pdf-scanner {
+    animation-duration: 1.2s !important; /* Faster scan animation */
+}
+
+.fast-mode .flying-page:nth-child(1) {
+    animation-duration: 1.5s !important;
+}
+
+.fast-mode .flying-page:nth-child(2) {
+    animation-duration: 1.5s !important;
+}
+
+.fast-mode .flying-page:nth-child(3) {
+    animation-duration: 1.5s !important;
+}
+
+.fast-mode .pdf-document::after {
+    animation-duration: 1s !important;
+}
+
+/* Execution time display */
+#execution-time {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* Make sure our background color doesn't fade on hover */
+.bg-purple:hover {
+    background-color: #6f42c1 !important;
+}

@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}PDF Extraction API Demo{% endblock %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-lg-6">
+        <div class="card bg-dark mb-4">
+            <div class="card-body">
+                <h1 class="card-title mb-4">PDF Extraction API</h1>
+                <p class="lead">Extract structured content from your PDF files with our powerful API.</p>
+                <p>Our service can handle both text-based and image-based PDFs, providing you with clean, structured data ready for use in your applications.</p>
+                <div class="mt-4">
+                    <a href="/api-docs" class="btn btn-primary">
+                        <i class="fas fa-book me-2"></i>API Documentation
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0">Features</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-3">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <strong>Text Extraction</strong>: Extract raw text from text-based PDFs
+                    </li>
+                    <li class="mb-3">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <strong>Structured Content</strong>: Extract headings, paragraphs, and tables
+                    </li>
+                    <li class="mb-3">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <strong>OCR Support</strong>: Extract text from scanned PDFs using OCR
+                    </li>
+                    <li class="mb-3">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <strong>Metadata Extraction</strong>: Get PDF metadata like title, author, etc.
+                    </li>
+                    <li class="mb-3">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <strong>Simple Integration</strong>: Easy to integrate RESTful API
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <strong>Optimized Performance</strong>: Parallel processing and caching for faster results
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0">Try It Out</h5>
+            </div>
+            <div class="card-body">
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Upload a PDF file</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".pdf" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Extraction Type</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="extraction_type" id="text" value="text" checked>
+                            <label class="form-check-label" for="text">
+                                Text Extraction
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="extraction_type" id="structured" value="structured">
+                            <label class="form-check-label" for="structured">
+                                Structured Content
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="extraction_type" id="ocr" value="ocr">
+                            <label class="form-check-label" for="ocr">
+                                OCR (for scanned PDFs)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Performance Options</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="fast_mode" name="fast_mode" value="true">
+                            <label class="form-check-label" for="fast_mode">
+                                <i class="fas fa-bolt text-warning me-1"></i> Fast Mode
+                                <small class="text-muted d-block">Processes PDFs faster with parallel processing, but may be less accurate</small>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="use_cache" name="use_cache" value="true" checked>
+                            <label class="form-check-label" for="use_cache">
+                                <i class="fas fa-database text-info me-1"></i> Use Cache
+                                <small class="text-muted d-block">Reuse previous results when processing the same PDF</small>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Additional Options</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="include_metadata" name="include_metadata" value="true">
+                            <label class="form-check-label" for="include_metadata">
+                                Include Metadata
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="include_images" name="include_images" value="true">
+                            <label class="form-check-label" for="include_images">
+                                Include Image Info
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="upload-btn">
+                        <i class="fas fa-upload me-2"></i>Upload & Process
+                    </button>
+                </form>
+
+                <div id="processing-indicator" class="text-center my-4 d-none">
+                    <div id="pdf-animation-container" class="pdf-animation-container">
+                        <!-- PDF Document -->
+                        <div class="pdf-document"></div>
+                        
+                        <!-- Scanner Line -->
+                        <div class="pdf-scanner"></div>
+                        
+                        <!-- OCR Speech Bubble -->
+                        <div class="ocr-bubble">Reading text...</div>
+                        
+                        <!-- Text Extraction -->
+                        <div class="text-extract">abc...</div>
+                        
+                        <!-- Flying Pages -->
+                        <div class="flying-page"></div>
+                        <div class="flying-page"></div>
+                        <div class="flying-page"></div>
+                    </div>
+                    
+                    <p id="processing-message" class="mt-2">
+                        Processing your PDF. This may take a moment...
+                    </p>
+                    
+                    <div class="progress mt-3" style="height: 10px;">
+                        <div id="processing-progress" class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-dark mt-4 d-none" id="result-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Results</h5>
+                <div>
+                    <span id="execution-time" class="text-muted me-3"></span>
+                    <button class="btn btn-sm btn-outline-secondary" id="copy-results">
+                        <i class="fas fa-copy me-1"></i>Copy
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="results-container">
+                    <pre id="results" class="bg-dark text-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0">Integration with StudyBuddy</h5>
+            </div>
+            <div class="card-body">
+                <h6>API Endpoints</h6>
+                <div class="table-responsive">
+                    <table class="table table-dark">
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Method</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>/extract</code></td>
+                                <td>POST</td>
+                                <td>Extract content from an uploaded PDF file</td>
+                            </tr>
+                            <tr>
+                                <td><code>/extract-url</code></td>
+                                <td>POST</td>
+                                <td>Extract content from a PDF at a specified URL</td>
+                            </tr>
+                            <tr>
+                                <td><code>/health</code></td>
+                                <td>GET</td>
+                                <td>Health check endpoint</td>
+                            </tr>
+                            <tr>
+                                <td><code>/clear-cache</code></td>
+                                <td>POST</td>
+                                <td>Clear cached extraction results to free memory</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="mt-4">Next.js Integration Code Example</h6>
+                <pre class="bg-dark text-light p-3 rounded">
+// Example Next.js code to integrate with the PDF extraction API
+
+// Function to extract content from a PDF URL
+async function extractPDFContent(pdfUrl, extractionType = "text", options = {}) {
+  try {
+    const response = await fetch("http://your-api-host:8000/extract-url", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        pdf_url: pdfUrl,
+        extraction_type: extractionType,
+        fast_mode: options.fastMode || false,
+        use_cache: options.useCache !== false,
+        include_metadata: options.includeMetadata || false,
+        include_images: options.includeImages || false
+      }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error extracting PDF content:", error);
+    throw error;
+  }
+}
+
+// Usage in a React component
+function PDFUploadComponent() {
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [extractedContent, setExtractedContent] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  const handleExtract = async () => {
+    setLoading(true);
+    try {
+      const result = await extractPDFContent(pdfUrl, "structured", {
+        fastMode: true,
+        includeMetadata: true
+      });
+      setExtractedContent(result);
+    } catch (error) {
+      console.error("Extraction failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    &lt;div&gt;
+      {/* Your UI components */}
+    &lt;/div&gt;
+  );
+}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
