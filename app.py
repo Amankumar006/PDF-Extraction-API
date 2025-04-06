@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 
-# Define the API endpoint
+# Define the API endpoint - use the public URL in production or localhost for development
 API_URL = "http://localhost:8000"
 
 # Create uploads directory if it doesn't exist
@@ -36,7 +36,7 @@ def api_docs():
 
 @app.route('/swagger-ui')
 def swagger_ui():
-    return redirect('http://localhost:8000/docs')
+    return redirect(f'{API_URL}/docs')
 
 @app.route('/extract', methods=['POST'])
 def upload_file():
