@@ -1,53 +1,59 @@
 # PDF-Extraction-API
 
-A Node.js based API service for extracting text and metadata from PDF files.
+A Python-based API service for extracting text, images, and metadata from PDF files.
 
 ## Features
 
 - Extract text content from PDF files
-- Parse and structure extracted content
+- Extract images from PDF files
+- Extract metadata from PDF files
+- OCR capabilities for scanned PDFs
+- Performance optimization options
+- Caching capabilities
 - RESTful API endpoints for PDF processing
-- Support for multiple file uploads
+- Web interface for easy file uploads
 - Error handling and validation
 
 ## Prerequisites
 
-- Node.js (v14 or higher)
-- MongoDB
-- NPM or Yarn
+- Python 3.11 or higher
+- pip (Python package manager)
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/pdf-extraction-api.git
-cd pdf-extraction-api
+git clone https://github.com/Amankumar006/PDF-Extraction-API.git
+cd PDF-Extraction-API
 ```
 
 2. Install dependencies:
 ```bash
-npm install
-```
-
-3. Set up environment variables:
-Create a `.env` file with:
-```
-PORT=3000
-MONGODB_URI=your_mongodb_connection_string
+pip install -r requirements.txt
 ```
 
 ## Usage
 
-1. Start the server:
+1. Start the API server:
 ```bash
-npm start
+python3 api_server.py
 ```
 
-2. API Endpoints:
+2. Start the web server:
+```bash
+python3 main.py
+```
 
-- `POST /api/upload` - Upload PDF file(s)
-- `GET /api/extract/:id` - Get extracted content
-- `GET /api/status/:id` - Check extraction status
+3. Access the application:
+- Web Interface: http://localhost:5001
+- API Documentation: http://localhost:8000/docs
+
+## API Endpoints
+
+- `POST /extract` - Upload and extract content from a PDF file
+- `POST /extract-url` - Extract content from a PDF URL
+- `POST /extract-optimized` - Extract content with performance optimization
+- `POST /clear-cache` - Clear the extraction cache
 
 ## Error Handling
 
@@ -55,7 +61,8 @@ The API implements proper error handling for:
 - Invalid file formats
 - File size limits
 - Processing errors
-- Database connection issues
+- Network issues
+- OCR failures
 
 ## Contributing
 
