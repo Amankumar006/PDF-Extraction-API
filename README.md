@@ -2,6 +2,9 @@
 
 A Python-based API service for extracting text, images, and metadata from PDF files.
 
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/Amankumar006/PDF-Extraction-API/releases)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 ## Features
 
 - Extract text content from PDF files
@@ -240,3 +243,63 @@ The application logs to the console and can be configured for file logging. Chec
 ## License
 
 MIT License
+
+## Versioning and Releases
+
+This project follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH):
+
+- **MAJOR** version for incompatible API changes
+- **MINOR** version for backward-compatible functionality additions
+- **PATCH** version for backward-compatible bug fixes
+
+### Release Process
+
+1. Update the `VERSION` file with the new version number
+2. Create a git tag for the release:
+   ```bash
+   git tag -a v1.0.0 -m "Release version 1.0.0"
+   ```
+3. Push the tag to GitHub:
+   ```bash
+   git push origin v1.0.0
+   ```
+4. Create a new release on GitHub:
+   - Go to the [Releases](https://github.com/Amankumar006/PDF-Extraction-API/releases) page
+   - Click "Draft a new release"
+   - Select the tag you just pushed
+   - Add release notes describing the changes
+   - Click "Publish release"
+
+### Release Notes Format
+
+```markdown
+## [Version] - YYYY-MM-DD
+
+### Added
+- New features
+
+### Changed
+- Changes in existing functionality
+
+### Deprecated
+- Soon-to-be removed features
+
+### Removed
+- Removed features
+
+### Fixed
+- Bug fixes
+
+### Security
+- Security fixes
+```
+
+### Current Releases
+
+- [v1.0.0](https://github.com/Amankumar006/PDF-Extraction-API/releases/tag/v1.0.0) - Initial release
+  - Basic PDF text extraction
+  - Image extraction support
+  - Metadata extraction
+  - OCR capabilities
+  - Web interface
+  - API endpoints
