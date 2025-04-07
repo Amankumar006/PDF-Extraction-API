@@ -303,3 +303,119 @@ This project follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PAT
   - OCR capabilities
   - Web interface
   - API endpoints
+
+## Deployment
+
+### Local Deployment
+
+1. Clone the repository:
+```bash
+git clone https://github.com/Amankumar006/PDF-Extraction-API.git
+cd PDF-Extraction-API
+```
+
+2. Run the deployment script:
+```bash
+./scripts/deploy.sh
+```
+
+The script will:
+- Pull the latest changes
+- Set up a virtual environment
+- Install dependencies
+- Start both the API and web servers
+
+To stop the servers, press `Ctrl+C`.
+
+### Production Deployment
+
+For production deployment, it's recommended to use a process manager like PM2 or Supervisor. Here's an example using PM2:
+
+1. Install PM2 globally:
+```bash
+npm install -g pm2
+```
+
+2. Create a PM2 ecosystem file (`ecosystem.config.js`):
+```javascript
+module.exports = {
+  apps: [
+    {
+      name: 'pdf-api',
+      script: 'api_server.py',
+      interpreter: 'python3',
+      env: {
+        FLASK_ENV: 'production',
+        FLASK_DEBUG: '0'
+      }
+    },
+    {
+      name: 'pdf-web',
+      script: 'main.py',
+      interpreter: 'python3',
+      env: {
+        FLASK_ENV: 'production',
+        FLASK_DEBUG: '0'
+      }
+    }
+  ]
+};
+```
+
+3. Start the application:
+```bash
+pm2 start ecosystem.config.js
+```
+
+4. Set up PM2 to start on system boot:
+```bash
+pm2 startup
+pm2 save
+```
+
+### Docker Deployment
+
+1. Build the Docker image:
+```bash
+docker build -t pdf-extraction-api .
+```
+
+2. Run the container:
+```bash
+docker run -d \
+  -p 8000:8000 \
+  -p 5001:5001 \
+  -v $(pwd)/cache:/app/cache \
+  pdf-extraction-api
+```
+
+### Environment Variables for Production
+
+For production deployment, make sure to set these environment variables:
+
+```env
+FLASK_ENV=production
+FLASK_DEBUG=0
+SESSION_SECRET=your_secure_secret_here
+CACHE_ENABLED=true
+CACHE_DIR=/path/to/persistent/storage
+```
+
+### Monitoring and Logging
+
+1. Check server status:
+```bash
+pm2 status  # If using PM2
+```
+
+2. View logs:
+```bash
+pm2 logs    # If using PM2
+# Or
+tail -f logs/app.log
+```
+
+3. Monitor system resources:
+```bash
+pm2 monit   # If using PM2
+```
