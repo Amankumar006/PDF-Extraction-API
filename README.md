@@ -1,3 +1,9 @@
+for more info visit here
+https://amankumar006.github.io/PDF-Extraction-API/
+
+
+
+
 # PDF-Extraction-API
 
 A Python-based API service for extracting text, images, and metadata from PDF files.
